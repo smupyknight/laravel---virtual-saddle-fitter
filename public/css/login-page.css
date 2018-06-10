@@ -1,0 +1,102 @@
+.xs-left-content {
+	text-align: left;
+}
+
+.xs-center-content {
+	text-align: center;
+}
+
+.xs-right-content {
+	text-align: right;
+}
+
+.login-page-logo-wrapper {
+	margin: 0 auto 1em auto;
+	width: 100%;
+	max-width: 300px;
+}
+
+.login-page-logo-wrapper>img {
+	width: 100%;
+}
+
+.container.loginscreen {
+	width: 100%;
+	max-width: 300px;
+}
+
+form {
+	margin-top: 2.5em;
+}
+
+button {
+	width: 100%;
+}
+
+.form-group {
+	position: relative;
+	height: 4em;
+	padding: 1em 0;
+}
+
+.form-input-placeholder {
+	position: absolute;
+	top: 0;
+	left: 0;
+	display: block;
+	width: 100%;
+	height: 3.625em;
+	line-height: 3em;
+	color: #999;
+	text-align: left;
+	cursor: pointer;
+	transition: all 0.4s;
+}
+.form-group.focus .form-input-placeholder {
+	top: -1.375em;
+	color: #1ab394;
+	cursor: default;
+}
+
+.form-input-placeholder:after {
+	content: attr(data-placeholder);
+}
+
+input[name='email'],
+input[name='password'] {
+	border: 0;
+	border-bottom: 1px solid #e5e6e7;
+}
+
+.help-block {
+	margin-top: 0;
+	margin-bottom: 3em;
+	color: #ff7b1e;
+}
+
+.extra-function-list {
+	padding-left: 0;
+	margin-bottom: 1em;
+}
+
+.extra-function-list>div {
+	padding: 0.5em 0;
+}
+
+@media screen and (min-width: 768px) {
+	.sm-left-content {
+		text-align: left;
+	}
+
+	.sm-center-content {
+		text-align: center;
+	}
+
+	.sm-right-content {
+		text-align: right;
+	}
+
+	button {
+		width: auto;
+	}
+}

@@ -1,0 +1,14 @@
+/* Author: Toni Lam */
+/* Date: 2018-01-25 */
+
+.tooltip-under-the-box {
+	display: block;
+	overflow: hidden;
+	font-size: 0;
+	color: #1ab394;
+	transition-property: all;
+	transition-duration: 0.5s;
+}
+.form-group.focused .tooltip-under-the-box {
+	font-size: 0.825em;
+}

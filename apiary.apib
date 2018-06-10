@@ -1,0 +1,1493 @@
+FORMAT: 1A
+HOST: http://virtual-saddle-fitter.staging.buckhamduffy.com
+
+# Virtual Saddle Fitters API
+
+# Group Authentication APIs
+
+Mobile apps can use these APIs to get API token
+
+### Login [POST /api/v1/auth/login]
+
+Get API token with email and password.
+Use this to authenticate other API calls using Bearer Authentication header
+
+`Authorization: Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiIsImp0aSI6I...`
+
++ Request (application/json)
+    + Attributes
+        + email: `testuser@com.com` (string) - email
+        + password: `secret` (string) - password
+
++ Response 200 (application/json)
+    + Attributes
+        + api_token: `eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiIsImp0aSI6I...` (string) - Bearer API token
+
+### Get User information [GET /api/v1/user]
+
+Get user details information including user type
+
++ Response 200 (application/json)
+    + Attributes
+        + user (object) - user's personal information
+            + id: 1 (number) - id of user
+            + client_id: 1 (number) - client id if user is client-user
+            + fitter_id: 1 (number) - fitter id if user is fitter-admin or fitter-user
+            + first_name: `Harry` - first name of user
+            + last_name: `Potter` - last name of user
+            + email: `harrypotter@hp.com` - email of user
+            + type: `fitter-admin` (enum[string]) - type of user
+                + Members
+                    + `fitter-admin`
+                    + `fitter-user`
+                    + `user`
+        + client (object) - client object if user is client-uesr
+        + fitter (object) - fitter object if user if fitter-admin or fitter-user
+
+# Group Fitter Admin APIs
+
+Fitter Admins can manage resources of his own fitter; Clients, Riders, Horses, Saddles, Bookings, FitChecks, etc.
+
+## Bookings [/api/v1/admin/bookings]
+
+Manages fitcheck bookings of clients related to Fitter.
+
+### List Bookings [GET /api/v1/admin/bookings/{?booking_status,per_page,page}]
+
+Get paginated list of upcoming or completed bookings of his own clients.
+
++ Parameters
+    + booking_status (enum[string], optional) - Time range of Bookings
+        + Members
+            + `upcoming`
+            + `completed`
+    + per_page: 15 (number, optional) - Number of Bookings per page to paginate
+    + page: 1 (number, optional) - Number of page to get
+
++ Response 200 (application/json)
+    + Attributes
+        + total: 2 (number) - Total item count
+        + current_page: 1 (number) - Current page of pagination
+        + per_page: 15 (number) - Number of items per page
+        + last_page: 1 (number) - Total pages of pagination
+        + data (array) - array of bookings returned
+            + (object) - individual Booking object
+                + id: 1 (number) - Booking id
+                + client (object) - Client who booked fitcheck
+                    + id: 1 (number) - id of client
+                    + name: `Tom Riddle` (string) - name of client
+                + horse (object) - horse to fitcheck
+                    + id: 1 (number) - id of horse
+                    + stable_name: `PonyABC` (string) - name of horse
+                + rider (object) - rider to fitcheck
+                    + id: 1 (number) - id of rider
+                    + first_name: `Severus` (string) - first name of rider
+                    + last_name: `Snape` (string) - last name of rider
+                + date: `31/12/2017` (string) - booking date in `d/m/y` format
+                + created_at: `31/12/2017` (string) - booked date  in `d/m/y` format
+                + updated_at: `31/12/2017` (string) - booking details last updated date  in `d/m/y` format
+
+### Create Booking [POST]
+
+Create a new fitcheck booking of his client with client's horse and rider.
+
++ Request (application/json)
+    + Attributes
+        + client_id: 1 (number) - id of client
+        + horse_id: 1 (number) - id of horse within the client
+        + rider_id: 1 (number) - id of rider within the client
+        + user_id: 1 (number, optional) - id of fitter user who will do fitcheck
+        + saddle_id: 1 (number, optional) - id of existing saddle
+        + date: `31/12/2017` (string, optional) - date of booking
+        + address: `Fakevile Fake Town` (string) - address of booking
+        
++ Response 200 (application/json)
+    + Attributes
+        + success: true (boolean)
+        + id: 1 (number) - id of created booking
+
+### Get Booking [GET /api/v1/admin/bookings/{booking_id}]
+
+Get details of existing booking, with booking_id
+
++ Parameters
+    + booking_id: 1 (number) - booking id to get details
+    
++ Response 200 (application/json)
+    + Attributes
+        + id: 1 (number) - Booking id
+        + client (object) - Client who booked fitcheck
+            + id: 1 (number) - id of client
+            + name: `Tom Riddle` (string) - name of client
+        + horse (object) - horse to fitcheck
+            + id: 1 (number) - id of horse
+            + stable_name: `PonyABC` (string) - name of horse
+        + rider (object) - rider to fitcheck
+            + id: 1 (number) - id of rider
+            + first_name: `Severus` (string) - first name of rider
+            + last_name: `Snape` (string) - last name of rider
+        + user (object) - fitter user who will be doing fitcheck
+            + id: 1 (number) - id of fitter user
+            + first_name: `Draco` (string) - first name of fitter user
+            + last_name: `Malfoy` (string) - last name of fitter user
+        + saddle (object) - saddle to be checked
+            + id: 1 (number) - id of saddle
+            + name: `Saddle-1` (string) - name of saddle
+        + date: `31/12/2017` (string) - booking date in `d/m/y` format
+        + address: `Fake vile` (string) - booking address
+        + created_at: `31/12/2017` (string) - booked date  in `d/m/y` format
+        + updated_at: `31/12/2017` (string) - booking details last updated date  in `d/m/y` format
+
+### Update Booking [PUT /api/v1/admin/bookings/{booking_id}]
+
+Update details of an existing Booking
+
++ Parameters
+    + booking_id: 1 (number) - booking id to update details
+
++ Request (application/json)
+    + Attributes
+        + client_id: 1 (number, required) - id of client
+        + horse_id: 1 (number) - id of horse within the client
+        + rider_id: 1 (number) - id of rider within the client
+        + user_id: 1 (number, optional) - id of fitter user who will do fitcheck
+        + saddle_id: 1 (number, optional) - id of existing saddle
+        + date: `31/12/2017` (string, optional) - date of booking
+        + address: `Fakevile Fake Town` (string) - address of booking
+
++ Response 200 (application/json)
+    + Attributes
+        + success: true (boolean)
+        + id: 1 (number) - number of updated booking
+
+### Delete Booking [DELETE /api/v1/admin/bookings/{booking_id}]
+
+Delete an existing Booking
+
++ Parameters
+    + booking_id: 1 (number) - booking id to delete
+    
++ Response 200 (application/json)
+    + Attributes
+        + success: true (boolean)
+
+## Clients [/api/v1/admin/clients]
+
+Manages clients related to Fitter.
+
+### List Clients [GET /api/v1/admin/clients/{?search,per_page,page}]
+
+Get paginated list of clients, filter by name or email address.
+
++ Parameters
+    + search (string, optional) - Search string to filter name or email of clients
+    + per_page: 15 (number, optional) - Number of clients per page to paginate
+    + page: 1 (number, optional) - Number of page to get
+
++ Response 200 (application/json)
+    + Attributes
+        + total: 2 (number) - Total item count
+        + current_page: 1 (number) - Current page of pagination
+        + per_page: 15 (number) - Number of items per page
+        + last_page: 1 (number) - Total pages of pagination
+        + data (array) - array of bookings returned
+            + (object) - individual Client object
+                + id:1 (number) - id of client
+                + name: `Tom Riddle` (string) - name of client
+                + email: `tom.riddle@hp.com` (string) - email of client
+                + address: `Fake Address 1` (string) - address of client
+                + suburb: `FakeVile 1` (string) - suburb of client
+                + postcode: `1234` (string) - post code of client
+                + state: `QLD` (string) - state of client
+
+### Create Client [POST /api/v1/admin/clients]
+
+Create a new Client with detailed information.
+
++ Request (application/json)
+    + Attributes
+        + name: `Rufus Scrimgeour` (string) - name of client
+        + email: `rufus.scrimgeour@ministryofmagic.com` (string) - email of client
+        + address: `Fake Address 1` (string) - address of client
+        + suburb: `FakeVile 1` (string) - suburb of client
+        + postcode: `1234` (string) - post code of client
+        + state: `QLD` (string) - state of client
+
++ Response 200 (application/json)
+    + Attributes
+        + success: true (boolean)
+        + id: `1` (number) - id of created client
+
+### Get Client [GET /api/v1/admin/clients/{client_id}]
+
+Get details of a client.
+
++ Parameters
+    + client_id: 1 (number) - client id to get details
+
++ Response 200 (application/json)
+    + Attributes
+        + client (object) - Detailed information of client
+            + id: 1 (number) - id of client
+            + name: `Tom Riddle` (string) - name of client
+            + email: `tom.riddle@hp.com` (string) - email of client
+            + address: `Fake Address 1` (string) - address of client
+            + suburb: `FakeVile 1` (string) - suburb of client
+            + postcode: `1234` (string) - post code of client
+            + state: `QLD` (string) - state of client
+        + horses (array) - horses of the client
+            + (object) - individual horse object
+                + id: 1 (number) - id of individual horse
+                + stable_name: `Test Horse 1` (string) - name of horse
+                + breeding_name: `Test Breed 1` (string) - breeding of horse
+                + paddock_address: `Test Paddock 1` (string) - test paddock address
+                + breed: `Test Breed 1` (string) - breeding of horse
+                + colour: `skewbald` (string) - color of horse
+                + height: 123 (number) - height of horse
+                + weight: 124 (number) - weight of horse
+                + girth: 30 (number) - girth of horse
+                + length: 125 (number) - length of horse
+                + age: 20 (number) - age of horse
+                + dob: `30/12/1987` (string) - date of birth in `d/m/y` format
+                + discipline: `Dressage` (string) - discipline of horse
+                + sex: `Stallion` (string) - sex of horse
+                + photo: `http://testurl.com` (string) - horse photo url
+                + created_at: `31/12/2017` (string) - item created date in `d/m/y` format
+                + updated_at: `31/12/2017` (string) - item updated date in `d/m/y` format
+        + riders (array) - riders of the client
+            + (object) - individual rider object
+                + id: 1 (number) - id of rider
+                + first_name: `Severus` (string) - first name of rider
+                + last_name: `Snape` (string) - last name of rider
+                + address: `FakeAddress 1` (string) - address of rider
+                + mobile: `1234567890` (string) - mobile number of rider
+                + email: `severus.snape@hogwart.com` (string) - email address of rider
+                + discipline: `Racing` (string) - discipline of rider
+                + stirrup_size: `3` (string) - stirrup sise
+                + stirrup_leahter: `3` (string) - stirrup leadther
+                + height: 180 (number) - heigth of rider
+                + jodphur_size: `5` (string) - jodphur sise
+                + is_vip_member: false (boolean) - true if rider is vip member
+                + award_points: 100 (number) - award point of rider
+                + has_registered_on_website: false (boolean) - true if rider signed up using website
+                + created_at: `31/12/2017` (string) - item created date in `d/m/y` format
+                + updated_at: `31/12/2017` (string) - item updated date in `d/m/y` format
+        + saddles (array) - saddles of the client
+            + (object) - individual saddle object
+                + id: 1 (number) - id of saddle
+                + brand_name: `TestSaddleBrand` (string) - brand name of saddle
+                + model: `TestModel` (string) - model name of saddle
+                + serial_number: `12345ABCD` (string) - serial number of saddle
+                + rider: `Severus Snape` (string) - full name of rider related to saddle
+                + horse_name: `TestHorse 1` (string) - name of horse related to horse
+                + created_at: `31/12/2017` (string) - item created date in `d/m/y` format
+                + updated_at: `31/12/2017` (string) - item updated date in `d/m/y` format
+        + users (array) - users of the client
+            + (object) - individual user object
+                + id: 1 (number) - id of user
+                + first_name: `Draco` (string) - first name of user
+                + last_name: `Malfoy` (string) - last name of user
+                + status: `Invited` (enum[string]) - status of user
+                    + Members
+                        + `Invited`
+                        + `Active`
+                + email: `draco.malfoy@hp.com` (string) - email of user
+
+### Update Client [PUT /api/v1/admin/clients/{client_id}]
+
+Update details of a client
+
++ Parameters
+    + client_id: 1 (number) - id of client to update details
+
++ Request (application/json)
+    + Attributes
+        + name: `Rufus Scrimgeour` (string) - name of client
+        + email: `rufus.scrimgeour@ministryofmagic.com` (string) - email of client
+        + address: `Fake Address 1` (string) - address of client
+        + suburb: `FakeVile 1` (string) - suburb of client
+        + postcode: `1234` (string) - post code of client
+        + state: `QLD` (string) - state of client
+
++ Response 200 (application/json)
+    + Attributes
+        + success: true (boolean)
+        + id: 1 (number) - id of updated client
+
+### Delete Client [DELETE /api/v1/admin/clients/{client_id}]
+
+Delete an existing client
+
++ Parameters
+    + client_id: 1 (number) - id of client to delete
+
++ Response 200 (application/json)
+    + Attributes
+        + success: true (boolean)
+
+### Invite a Client's User [POST /api/v1/admin/clients/{client_id}/invite-user]
+
+Invite a user of client, send invitation email
+
++ Parameters
+    + client_id: 1 (number) - id of client to invite user
+
++ Request (application/json)
+    + Attributes
+        + first_name: `Draco` (string) - first name of user to be invited
+        + last_naem: `Malfoy` (string) - last name of user to be invited
+        + email: `draco.malfoy@hp.com` (string) - email of user to be invited
+
++ Response 200 (application/json)
+    + Attributes
+        + success: true (boolean)
+        + id: 1 (number) - id of user created
+        + email: `draco.malfoy@hp.com` (string) - email of user to be invited, sent email to this address
+
+### Create a Client's User [POST /api/v1/admin/clients/{client_id}/create-user]
+
+Create a Client's user with details
+
++ Parameters
+    + client_id: 1 (number) - id of client to add user
+
++ Request (application/json)
+    + Attributes
+        + first_name: `Draco` (string) - first name of user
+        + last_name: `Malfoy` (string) - last name of user
+        + email: `draco.malfoy@hp.com` (string)  - email of user
+        + password: `secret` (string) - password of user
+        + password_confirmation: `secret` (string) - password confirmation
+
++ Response 200 (application/json)
+    + Attributes
+        + success: true (boolean)
+        + id: 1 (number) - id of user created
+
+### Get Client's User [GET /api/v1/admin/clients/{client_id}/get-user/{user_id}]
+
+Get details of a User of client
+
++ Parameters
+    + client_id: 1 (number) - id of client of user
+    + user_id: 1 (number) - id of client's user
+
++ Response 200 (application/json)
+    + Attributes
+        + first_name: `Draco` (string) - first name of user
+        + last_name: `Malfoy` (string) - last name of user
+        + email: `draco.malfoy@hp.com` (string) - email of user
+        + client_id: 1 (number) - id of client this user belongs to
+
+### Update Client's User [PUT /api/v1/admin/clients/{client_id}/put-user/{user_id}]
+
+Update details of a Client's User
+
++ Parameters
+    + client_id: 1 (number) - id of client of user
+    + user_id: 1 (number) - id of client's user
+
++ Request (application/json)
+    + Attributes
+        + first_name: `Draco` (string) - first name of user
+        + last_name: `Malfoy` (string) - last name of user
+        + email: `draco.malfoy@hp.com` (string)  - email of user
+        + password: `secret` (string) - password of user
+        + password_confirmation: `secret` (string) - password confirmation
+
++ Response 200 (application/json)
+    + Attributes
+        + success: true (boolean)
+        + id: 1 (number) - id of user updated
+
+### Delete Client's User [DELETE /api/v1/admin/clients/{client_id}/delete-user/{user_id}]
+
+Delete existing User of a Client
+
++ Parameters
+    + client_id: 1 (number) - id of client of user
+    + user_id: 1 (number) - id of client's user
+
++ Response 200 (application/json)
+    + Attributes
+        + success: true (boolean)
+
+## FitChecks [/api/v1/admin/fitchecks]
+
+Manages Fitchecks.
+
+### List FitChecks [GET /api/v1/admin/fitchecks{?horse_id,rider_id,saddle_id,user_id,per_page,page}]
+
+Get paginated list of FitChecks of related clients, filter by Horse, Rider, Saddle, FitterUser
+
++ Parameters
+    + horse_id: 1 (number, optional) - id of horse to filter
+    + rider_id: 1 (number, optional) - id of rider to filter
+    + saddle_id: 1 (number, optional) - id of saddle to filter
+    + user_id: 1 (number, optional) - id of fitter user (who will do FitCheck) to filter
+    + per_page: 15 (number, optional) - Number of FitChecks per page to paginate
+    + page: 1 (number, optional) - Number of page to get
+
++ Response 200 (application/json)
+    + Attributes
+        + total: 2 (number) - Total item count
+        + current_page: 1 (number) - Current page of pagination
+        + per_page: 15 (number) - Number of items per page
+        + last_page: 1 (number) - Total pages of pagination
+        + data (array) - array of FitChecks returned
+            + (object) - individual FitCheck object
+                + id: 1 (number) - id of FitCheck
+                + rider (object) - Rider of FitCheck
+                    + id: 1 (number) - id of Rider
+                    + first_name: `Ron` (string) - first name of Rider
+                    + last_name: `Weasley`
+                + horse (object) - Horse of FitCheck
+                    + id: 1 (number) - id of Horse
+                    + stable_name: `TestHorse 1` (string) - name of Horse
+                + saddle (object) - Saddle of FitCheck
+                    + id: 1 (number) - id of Saddle
+                    + name: `Saddle 1` (string) - name of saddle
+                + user (object) - Fitter User who is doing FitCheck
+                    + id: 1 (number) - id of User
+                    + first_name: `Lucius` (string) - first name of user
+                    + last_name: `Malfoy` (string) - last name of user
+                + created_at: `31/12/2017` (string) - item created date in `d/m/y` format
+                + updated_at: `31/12/2017` (string) - item updated date in `d/m/y` format
+
+### Create FitCheck [POST /api/v1/admin/fitchecks]
+
+Create a new FitCheck with Rider, Horse, Saddle
+
++ Request (application/json)
+    + Attributes
+        + rider_id: 1 (number) - Rider to check
+        + horse_id: 1 (number) - Horse to check
+        + saddle_id: 1 (number, optional) - Saddle to check
+
++ Response 200 (application/json)
+    + Attributes
+        + success: true (boolean)
+        + id: 1 (number) - id of FitCheck just created
+
+### Get FitCheck [GET /api/v1/admin/fitchecks/{fitcheck_id}]
+
+Get details of a FitCheck
+
++ Parameters
+    + fitcheck_id: 1 (number) - id of FitCheck to get details
+
++ Response 200 (application/json)
+    + Attributes
+        + rider (object) - Rider object in details
+        + horse (object) - Horse object in details
+        + saddle (object) - Saddle object in details
+        + field_data (object) - fields of FitCheck
+
+### Update FitCheck [PUT /api/v1/admin/fitchecks/{fitcheck_id}]
+
+Update details of a FitCheck, occurs when doing FitCheck
+
++ Parameters
+    + fitcheck_id
+
++ Request (application/json)
+    + Attributes
+        + abdomen: `Dropped` (string)
+        + alterations (array)
+        + back_angle: `Uphill/High Wither` (string)
+        + back_length (string)
+        + back_type (string)
+        + channel_depth: `Shallow` (string)
+        + channel_width: `Wide` (string)
+        + contours_of_panel: `Matched to central` (string)
+        + drops_to (string)
+        + fat_cover: 3 (number)
+        + feet_length: `Average` (string)
+        + flocking_back: false (boolean)
+        + flocking_front: false (boolean)
+        + flocking_middle: false (boolean)
+        + foot_balance: `OF` (string)
+        + foot_problems: `Infections`, `Pain` (array)
+        + girth_point_angle: `Forward` (string)
+        + girth_point_position: `Point strap and 1` (string)
+        + girth_position: `Straight` (string)
+        + girth_size: 3 (number)
+        + girth_type: `Shaped` (string)
+        + hair_changes: `Curly hair`, `White hair` (array)
+        + heel_balance: `Low heel` (string)
+        + history_of_alterations (array)
+        + horse_id: 1 (number)
+        + movement_when_ridden: `Resistance`, `Bucking` (array)
+        + movement_when_saddled: `Dips back when rider mounts`, `Turns head /bites /cow kicks when saddled` (array)
+        + movement_when_saddled_no_rider: `Saddle moves excessively` (array)
+        + muscle_wastage: `Central right`, `Back right` (array)
+        + muscling: 3 (number)
+        + palation_findings: `Muscle tense`, `Muscle in spasms` (array)
+        + point_of_hip_tuber_coxae: `Lower on right` (string)
+        + pommel_clearance: `Girthed` (string)
+        + recommended_products (array)
+        + reduced_flexibility: `To left`, `Croup Tuck` (array)
+        + rider_id: 1 (number)
+        + saddle_balance: `Uphill` (string)
+        + saddle_id: 2 (number)
+        + saddle_length: `Adequate` (string)
+        + saddle_tilt: true (boolean)
+        + saddle_twist: true (boolean)
+        + shoeing_status: `Back feet shod` (string)
+        + shoulder (array)
+        + sits_off_centre (string)
+        + sits_upright: false (boolean)
+        + soreness: `Under waist of saddle` (array)
+        + tree_match_at_arc_of_spine: `Adequate` (string)
+        + tree_match_at_wither: `Wide` (string)
+        + wither_shape (string)
+        + wither_template (string)
+
++ Response 200 (application/json)
+    + Attributes
+        + success: true (boolean)
+        + id: 1 (number) id of FitCheck just updated
+
+### Delete FitCheck [DELETE /api/v1/admin/fitchecks/{fitcheck_id}]
+
+Delete an existing FitCheck
+
++ Parameters
+    + fitcheck_id: 1 (number) - id of FitCheck to delete
+
++ Response 200 (application/json)
+    + Attributes
+        + success: true (boolean)
+
+## Fitters [/api/v1/admin/fitters]
+
+Get informations according to Fitter Users.
+
+### List `fitter-user`s [GET /api/v1/admin/fitters/my-users]
+
+Get my `fitter-user`s
+
++ Response 200 (application/json)
+    + Attributes
+        + data (array) - array of my fitter users
+            + (object) - individual user objects
+
+### List `fitter-user`s and `fitter-admin`s [GET /api/v1/admin/fitters/my-users-all]
+
+Get my `fitter-user`s and `fitter-admin`s
+
++ Response 200 (application/json)
+    + Attributes
+        + data (array) - array of my users
+            + (object) - individual user objects
+
+## Horses [/api/v1/admin/horses]
+
+Manage Horses of Clients related to Fitter.
+
+### List Horses [GET /api/v1/admin/horses{?search,per_page,page}]
+
+Get paginated list of Horses filtered by stable name and breeding name
+
++ Parameters
+    + search: `Test Horse` (string, optional) filter string for stable name or breeding name
+    + per_page: 15 (number, optional) - Number of Horses per page to paginate
+    + page: 1 (number, optional) - Number of page to get
+
++ Response 200 (application/json)
+    + Attributes
+        + total: 2 (number) - Total item count
+        + current_page: 1 (number) - Current page of pagination
+        + per_page: 15 (number) - Number of items per page
+        + last_page: 1 (number) - Total pages of pagination
+        + data (array) - array of Horses returned
+            + (object) - individual Horse object
+                + id: 1 (number) - id of Horse
+                + client_name: `Test Client` (string) - client name of Horse
+                + stable_name: `Test Horse` (string) - name of Horse
+                + breeding_name: `Test Breed` (string) - breeding name of Horse
+                + breed: `Test Breed` (string) - breeding name of Horse
+                + colour: `black` (string) - color of Horse
+                + discipline: `Racing` - Discipline of Horse
+                + age: 10 (number) - Age of Horse
+                + sex: `Stallion` (string) - Sex of Horse
+
+### Create Horse [POST /api/v1/admin/horses]
+
+Create a Horse belongs to a client
+
++ Request (application/json)
+    + Attributes
+        + client_id: 1 (number) - id of client that Horse belongs to
+        + stable_name: `New Horse` (string) - name of Horse
+        + breeding_name: `Test Breed` (string) - breeding of Horse
+        + paddock_address: `Test Address` (string) - paddock address of Horse
+        + postcode: `1234` (string) - postcode of Horse
+        + state: `QLD` (string) - state of Horse
+        + suburb: `FakeVile` (string) - suburb of Horse
+        + breed: `Test Breed` (string) - breeding of Horse
+        + height: 123 (number) - height of Horse
+        + weight: 234 (number) - weight of Horse
+        + girth: 345 (number) - girth size of Horse
+        + colour: `black` (string) - color of Horse
+        + age: 12 (number) - age of Horse
+        + dob: `31/12/2017` (string) - date of birth in d/m/Y format
+        + discipline: `Racing` (string) - discipline of Horse
+        + sex: `Stallion` (string) - sex of Horse
+        + microchip_number: `123ASDF` (string) -microchip number of Horse
+
++ Response 200 (application/json)
+    + Attributes
+        + succses: true (boolean)
+        + id: 1 (number) - id of Horse just created
+
+### Get Horse [GET /api/v1/admin/horses/{horse_id}]
+
+Get details of a Horse
+
++ Parameters
+    + horse_id: 1 (number) - id of Horse to get details
+
++ Response 200 (appcation/json)
+    + Attributes
+        + id: 1 (number) - id of Horse
+        + client (object) - client of Horse
+        + client_id: 1 (number) - id of client
+        + stable_name: `Test Horse` (string) - name of Horse
+        + breeding_name: `Test Breed` (string) - breeding of Horse
+        + paddock_address: `Test Address` (string) - address of Horse
+        + postcode: `1234` (string) - postcode of Horse
+        + state: `QLD` (string) - state of Horse
+        + suburb: `FakeVile` (string) - suburb of Horse
+        + breed: `Test Breed` (string) - breeding of Horse
+        + colour: `black` (string) - color of Horse
+        + height: 123 (number) - height of Horse
+        + weight: 234 (number) - weight of Horse
+        + girth: 345 (number) - girth size of Horse
+        + age: 12 (number) - age of Horse
+        + dob: `31/12/2017` (string) - date of birth in d/m/Y format
+        + discipline: `Racing` (string) - discipline of Horse
+        + sex: `Stallion` (string) - sex of Horse
+        + microchip_number: `123AVC` (string) - microchip number of Horse
+        + created_at: `31/12/2017` (string) - date of Horse record created
+        + updated_at: `31/12/2017` (string) - date of Horse record updated
+        + riders (array) - riders related to this Horse
+        + saddles (array) - saddles related to this Horse
+
+### Update Horse [PUT /api/v1/admin/horses/{horse_id}]
+
+Update a Horse details
+
++ Parameters
+    + horse_id: 1 (number) - id of Horse to delete
+
++ Request (application/json)
+    + Attributes
+        + client_id: 1 (number) - id of client that Horse belongs to
+        + stable_name: `New Horse` (string) - name of Horse
+        + breeding_name: `Test Breed` (string) - breeding of Horse
+        + paddock_address: `Test Address` (string) - paddock address of Horse
+        + postcode: `1234` (string) - postcode of Horse
+        + state: `QLD` (string) - state of Horse
+        + suburb: `FakeVile` (string) - suburb of Horse
+        + breed: `Test Breed` (string) - breeding of Horse
+        + height: 123 (number) - height of Horse
+        + weight: 234 (number) - weight of Horse
+        + girth: 345 (number) - girth size of Horse
+        + colour: `black` (string) - color of Horse
+        + age: 12 (number) - age of Horse
+        + dob: `31/12/2017` (string) - date of birth in d/m/Y format
+        + discipline: `Racing` (string) - discipline of Horse
+        + sex: `Stallion` (string) - sex of Horse
+        + microchip_number: `123ASDF` (string) -microchip number of Horse
+
++ Response 200 (application/json)
+    + Attributes
+        + succses: true (boolean)
+        + id: 1 (number) - id of Horse just updated
+
+### Delete Horse [DELETE /api/v1/admin/horses/{horse_id}]
+
+Delete an existing Horse
+
++ Parameters
+    + horse_id: 1 (number) - id of Horse to delete
+
++ Response 200 (application/json)
+    + Attributes
+        + success: true (boolean)
+
+## Resources [/api/v1/admin/resources]
+
+Get Availabe Styles, Colors, Breeds, Disciplines, Options used for FitCheck.
+
+### Get Styles, Colors, Breeds, Disciplines [GET /api/v1/admin/resources]
+
+Returns available styles, colors, breeds and disciplines
+
++ Response 200 (application/json)
+    + Attributes
+        + styles (array) - array of available styles
+        + colours (array) - array of available colours
+        + breeds (array) - array of available breeds
+        + disciplines (array) - array of available disciplines
+
+### Get FitCheck Options [GET /api/v1/admin/resources/fitcheck-options]
+
+Returns available options for FitCheck process
+
++ Response 200 (application/json)
+    + Attributes
+        + fitcheck-options (array) - array of available options per each check
+
+## Riders [/api/v1/admin/riders]
+
+Manage Riders of Clients related to Fitter.
+
+### List Riders [GET /api/v1/admin/riders{?search,per_page,page}]
+
+Get paginated list of Riders filtered by name or email address
+
++ Parameters
+    + search: `Test Rider` (string, optional) - filter string for name or email address
+    + per_page: 15 (number, optional) - Number of Riders per page to paginate
+    + page: 1 (number, optional) - Number of page to get
+
++ Response 200 (application/json)
+    + Attributes
+        + total: 2 (number) - Total item count
+        + current_page: 1 (number) - Current page of pagination
+        + per_page: 15 (number) - Number of items per page
+        + last_page: 1 (number) - Total pages of pagination
+        + data (array) - array of Riders returned
+            + (object) - individual Rider object
+                + id: 1 (number) - id of Rider
+                + client_id: 1 (number) - client id of Rider
+                + first_name: `TestFirstName` (string) - first name of Rider
+                + last_name: `` (string) - last name of Rider
+                + address: `Test Address` (string) - address of Rider
+                + postcode: `1234` (string) - postcode of Rider
+                + suburb: `Fake Vile` (string) - suburb of Rider
+                + state: `QLD` (string) - state of Rider
+                + mobile: `1234567890` (string) - mobile of Rider
+                + email: `testrider@com.com` (string) - email of Rider
+                + discipline: `Racing` (string) - discipline of Rider
+                + stirrup_size: `` (string) - stirrup size of Rider
+                + stirrup_leather: `` (string) - stirrup leather of Rider
+                + height: 180 (number) - height of Rider
+                + jodphur_size: `` (string) - jodphur size of Rider
+                + is_vip_member: false (boolean) - if Rider is VIP member
+                + award_points: 12 (number) - award points of Rider
+                + has_registered_on_website: false (boolean) - if Rider has registered on website
+                + created_at: `31/12/2017` (string) - item created date in `d/m/y` format
+                + updated_at: `31/12/2017` (string) - item updated date in `d/m/y` format
+
+### Create Rider [POST /api/v1/admin/riders]
+
+Create a new Rider
+
++ Request (application/json)
+    + Attributes
+        + client_id: 1 (number) - client id of Rider
+        + first_name: `TestFirstName` (string) - first name of Rider
+        + last_name: `` (string) - last name of Rider
+        + address: `Test Address` (string) - address of Rider
+        + postcode: `1234` (string) - postcode of Rider
+        + suburb: `Fake Vile` (string) - suburb of Rider
+        + state: `QLD` (string) - state of Rider
+        + mobile: `1234567890` (string) - mobile of Rider
+        + email: `testrider@com.com` (string) - email of Rider
+        + discipline: `Racing` (string) - discipline of Rider
+        + stirrup_size: `` (string) - stirrup size of Rider
+        + stirrup_leather: `` (string) - stirrup leather of Rider
+        + height: 180 (number) - height of Rider
+        + jodphur_size: `` (string) - jodphur size of Rider
+        + is_vip_member: false (boolean) - if Rider is VIP member
+        + award_points: 12 (number) - award points of Rider
+        + has_registered_on_website: false (boolean) - if Rider has registered on website
+
++ Response 200 (application/json)
+    + Attributes
+        + success: true (boolean)
+        + id: 1 (number) - id of Rider just created
+
+### Get Rider [GET /api/v1/admin/riders/{rider_id}]
+
+Get details of a Rider
+
++ Parameters
+    + rider_id: 1 (number) - id of Rider to get Details
+
++ Response 200 (application/json)
+    + Attributes
+        + rider (object) - details of Rider
+                + id: 1 (number) - id of Rider
+                + client_id: 1 (number) - client id of Rider
+                + first_name: `TestFirstName` (string) - first name of Rider
+                + last_name: `` (string) - last name of Rider
+                + address: `Test Address` (string) - address of Rider
+                + postcode: `1234` (string) - postcode of Rider
+                + suburb: `Fake Vile` (string) - suburb of Rider
+                + state: `QLD` (string) - state of Rider
+                + mobile: `1234567890` (string) - mobile of Rider
+                + email: `testrider@com.com` (string) - email of Rider
+                + discipline: `Racing` (string) - discipline of Rider
+                + stirrup_size: `` (string) - stirrup size of Rider
+                + stirrup_leather: `` (string) - stirrup leather of Rider
+                + height: 180 (number) - height of Rider
+                + jodphur_size: `` (string) - jodphur size of Rider
+                + is_vip_member: false (boolean) - if Rider is VIP member
+                + award_points: 12 (number) - award points of Rider
+                + has_registered_on_website: false (boolean) - if Rider has registered on website
+                + created_at: `31/12/2017` (string) - item created date in `d/m/y` format
+                + updated_at: `31/12/2017` (string) - item updated date in `d/m/y` format
+        + client (object) - details of Rider's Client
+        + horses (array) - Horses belongs to the Rider
+        + fitters (array) - Fitters related to the Rider
+
+### Update Rider [PUT /api/v1/admin/riders/{rider_id}]
+
+Update details of a Rider
+
++ Parameters
+    + rider_id: 1 (number) - id of Rider to update details
+
++ Request (application/json)
+    + Attributes
+        + client_id: 1 (number) - client id of Rider
+        + first_name: `TestFirstName` (string) - first name of Rider
+        + last_name: `` (string) - last name of Rider
+        + address: `Test Address` (string) - address of Rider
+        + postcode: `1234` (string) - postcode of Rider
+        + suburb: `Fake Vile` (string) - suburb of Rider
+        + state: `QLD` (string) - state of Rider
+        + mobile: `1234567890` (string) - mobile of Rider
+        + email: `testrider@com.com` (string) - email of Rider
+        + discipline: `Racing` (string) - discipline of Rider
+        + stirrup_size: `` (string) - stirrup size of Rider
+        + stirrup_leather: `` (string) - stirrup leather of Rider
+        + height: 180 (number) - height of Rider
+        + jodphur_size: `` (string) - jodphur size of Rider
+        + is_vip_member: false (boolean) - if Rider is VIP member
+        + award_points: 12 (number) - award points of Rider
+        + has_registered_on_website: false (boolean) - if Rider has registered on website
+
++ Response 200 (application/json)
+    + Attributes
+        + success: true (boolean)
+        + id: 1 (number) - id of Rider just updated
+
+### Delete Rider [DELETE /api/v1/admin/riders/{rider_id}]
+
+Delete existing Rider
+
++ Parameters
+    + rider_id: 1 (number) - id of Rider to delete
+
++ Response 200 (application/json)
+    + Attributes
+        + success: true (boolean)
+
+## Saddles [/api/v1/admin/saddles]
+
+Manage Saddles of Clients related to Fitter.
+
+### List Saddles [GET /api/v1/admin/saddles{?horse,per_page,page}]
+
+Get paginated list of Saddles filtered by Horse
+
++ Parameters
+    + horse: 1 (number, optional) - horse id to filter results
+    + per_page: 15 (number, optional) - Number of items per page to paginate
+    + page: 1 (number, optional) - Number of page to get
+
++ Response 200 (application/json)
+    + Attributes
+        + total: 2 (number) - Total item count
+        + current_page: 1 (number) - Current page of pagination
+        + per_page: 15 (number) - Number of items per page
+        + last_page: 1 (number) - Total pages of pagination
+        + data (array) - array of Riders returned
+            + (object) - individual Saddle object
+                + id: 1 (number) - id of Saddle
+                + name: `Test Saddle` (string) - name of Saddle
+                + horse (object) - Horse of Saddle
+                    + id: 1 (number) - id of Horse
+                    + stable_name: `Test Horse` (string) - name of Horse
+                + brand (object) - Brand of Saddle
+                    id: 1 (number) - id of Brand
+                    name: `Test Brand` (string) - name of Brand
+                + style (object) - Style of Saddle
+                    id: 1 (number) - id of Style
+                    name: `Test Style` (string) - name of Style
+                type: `Test Type` (string) - type of Saddle
+                serial_number: `123ABC` (string) - serial number of Saddle
+                created_at: `Test Type` (string) - date of item created in `d/m/Y` format
+
+### Create Saddle [POST /api/v1/admin/saddles]
+
+Create a Saddle
+
++ Request (application/json)
+    + Attributes
+        + rider_id: 1 (number) - rider id of Saddle
+        + horse_id: 1 (number) - horse id of Saddle
+        + brand_id: 1 (number) - brand id of Saddle
+        + style_id: 1 (number) - style id of Saddle
+        + name: `Test Saddle` (string) - name of Saddle
+        + price: 123 (number) - price of Saddle
+        + serial_number: `123ABC` (string) - serial number of Saddle
+        + size: 123 (string) - size of Saddle
+        + type: `All Purpose` (string) - type of Saddle
+        + gullet_size: `nm. m` (string) - gullet size of Saddle
+        + panel_type: `Flock` (string) - panel type of Saddle
+        + seat_style: `Deep seat` (string) - seat style of Saddle
+        + purchased_at: `31/12/2017` (string) - date of Saddle purchased in `d/m/Y` format
+        + warranty_period: 0 (number) - warranty period of Saddle in months
+
++ Response 200 (application/json)
+    + Attributes
+        + id: 1 (number) - id of Saddle created
+
+### Get Saddle [GET /api/v1/admin/saddles/{saddle_id}]
+
+Get details of a Saddle
+
++ Parameters
+    + saddle_id: 1 (number) - id of saddle to get details
+
++ Response 200 (application/json)
+    + Attributes
+        + rider_id: 1 (number) - rider id of Saddle
+        + rider (object) - details of rider
+            + id: 1 (number) - id of rider
+            + first_name: `Test First Name` (string) - first name of rider
+            + last_name: `Test Last Name` (string) - last name of rider
+        + horse_id: 1 (number) - horse id of Saddle
+        + horse (object) - details of horse
+        + horse (object) - Horse of Saddle
+            + id: 1 (number) - id of Horse
+            + stable_name: `Test Horse` (string) - name of Horse
+        + brand_id: 1 (number) - brand id of Saddle
+        + brand (object) - Brand of Saddle
+            id: 1 (number) - id of Brand
+            name: `Test Brand` (string) - name of Brand
+        + style_id: 1 (number) - style id of Saddle
+        + style (object) - Style of Saddle
+            id: 1 (number) - id of Style
+            name: `Test Style` (string) - name of Style
+        + name: `Test Saddle` (string) - name of Saddle
+        + price: 123 (number) - price of Saddle
+        + serial_number: `123ABC` (string) - serial number of Saddle
+        + size: 123 (string) - size of Saddle
+        + type: `All Purpose` (string) - type of Saddle
+        + gullet_size: `nm. m` (string) - gullet size of Saddle
+        + panel_type: `Flock` (string) - panel type of Saddle
+        + seat_style: `Deep seat` (string) - seat style of Saddle
+        + purchased_at: `31/12/2017` (string) - date of Saddle purchased in `d/m/Y` format
+        + warranty_period: 0 (number) - warranty period of Saddle in months
+
+### Update Saddle [PUT /api/v1/admin/saddles/{saddle_id}]
+
+Update details of a Saddle
+
++ Parameters
+    + saddle_id: 1 (number) - id of Saddle to Update
+
++ Request (application/json)
+    + Attributes
+        + rider_id: 1 (number) - rider id of Saddle
+        + horse_id: 1 (number) - horse id of Saddle
+        + brand_id: 1 (number) - brand id of Saddle
+        + style_id: 1 (number) - style id of Saddle
+        + name: `Test Saddle` (string) - name of Saddle
+        + price: 123 (number) - price of Saddle
+        + serial_number: `123ABC` (string) - serial number of Saddle
+        + size: 123 (string) - size of Saddle
+        + type: `All Purpose` (string) - type of Saddle
+        + gullet_size: `nm. m` (string) - gullet size of Saddle
+        + panel_type: `Flock` (string) - panel type of Saddle
+        + seat_style: `Deep seat` (string) - seat style of Saddle
+        + purchased_at: `31/12/2017` (string) - date of Saddle purchased in `d/m/Y` format
+        + warranty_period: 0 (number) - warranty period of Saddle in months
+
++ Response 200 (application/json)
+    + Attributes
+        + id: 1 (number) - id of Saddle updated
+
+### Delete Saddle [DELETE /api/v1/admin/saddles/{saddle_id}]
+
+Delete an existing Saddle
+
++ Parameters
+    + saddle_id: 1 (number) - id of Saddle to delete
+
++ Response 200 (application/json)
+    + Attributes
+        + success: true (boolean)
+
+# Group Client User APIs
+
+Client Users are way of Client to access platform, use platform.
+Client Users manage resources of their own Client; Horses, Riders, Booking.
+Also set relation between own Client and Fitters.
+
+## Bookings [/api/v1/client/bookings]
+
+Manage fitcheck bookings of Client.
+
+### List Bookings [GET /api/v1/client/bookings{?booking_status,per_page,page}]
+
+Get paginated list of upcoming or completed bookings.
+
++ Parameters
+    + booking_status (enum[string], optional) - Time range of Bookings
+        + Members
+            + `upcoming`
+            + `completed`
+    + per_page: 15 (number, optional) - Number of Bookings per page to paginate
+    + page: 1 (number, optional) - Number of page to get
+
++ Response 200 (application/json)
+    + Attributes
+        + total: 2 (number) - Total item count
+        + current_page: 1 (number) - Current page of pagination
+        + per_page: 15 (number) - Number of items per page
+        + last_page: 1 (number) - Total pages of pagination
+        + data (array) - array of bookings returned
+            + (object) - individual Booking object
+                + id: 1 (number) - Booking id
+                + fitter (object) - Fitter related to fitcheck
+                    + id: 1 (number) - id of Fitter
+                    + name: `Test Fitter` (string) - name of Fitter
+                + user (object) - Fitter's user who will do FitCheck
+                    + id: 1 (number) - id of usre
+                    + first_name: `TestFirstName1` (string) - first name of user
+                    + last_name; `TestLastName1` (string) - last name of user
+                + horse (object) - horse to fitcheck
+                    + id: 1 (number) - id of horse
+                    + stable_name: `PonyABC` (string) - name of horse
+                + rider (object) - rider to fitcheck
+                    + id: 1 (number) - id of rider
+                    + first_name: `Severus` (string) - first name of rider
+                    + last_name: `Snape` (string) - last name of rider
+                + saddle (object) - saddel of fitcheck
+                    + id: 1 (number) - id of saddle
+                    + name: `Test Saddle` (string) - name of saddle
+                + date: `31/12/2017` (string) - booking date in `d/m/y` format
+                + address: `Test Address` (string) - address of fitcheck
+                + created_at: `31/12/2017` (string) - booked date  in `d/m/y` format
+                + updated_at: `31/12/2017` (string) - booking details last updated date  in `d/m/y` format
+
+### Create Booking [POST /api/v1/client/bookings]
+
+Create a new Booking
+
++ Request (application/json)
+    + Attributes
+        + fitter_id: 1 (number) - id of Fitter who will manage this FitCheck
+        + horse_id: 1 (number) - id of horse within the client
+        + rider_id: 1 (number) - id of rider within the client
+        + saddle_id: 1 (number, optional) - id of existing saddle
+        + date: `31/12/2017` (string, optional) - date of booking
+        + address: `Fakevile Fake Town` (string) - address of booking
+
++ Response 200 (application/json)
+    + Attributes
+        + success: true (boolean)
+        + id: 1 (number) - id of created booking
+
+### Get Booking [GET /api/v1/client/bookings/{booking_id}]
+
+Get details of existing booking, with booking_id
+
++ Parameters
+    + booking_id: 1 (number) - booking id to get details
+
++ Response 200 (application/json)
+    + Attributes
+        + id: 1 (number) - Booking id
+        + fitter (object) - Fitter related to fitcheck
+            + id: 1 (number) - id of Fitter
+            + name: `Test Fitter` (string) - name of Fitter
+        + user (object) - Fitter's user who will do FitCheck
+            + id: 1 (number) - id of usre
+            + first_name: `TestFirstName1` (string) - first name of user
+            + last_name; `TestLastName1` (string) - last name of user
+        + horse (object) - horse to fitcheck
+            + id: 1 (number) - id of horse
+            + stable_name: `PonyABC` (string) - name of horse
+        + rider (object) - rider to fitcheck
+            + id: 1 (number) - id of rider
+            + first_name: `Severus` (string) - first name of rider
+            + last_name: `Snape` (string) - last name of rider
+        + saddle (object) - saddel of fitcheck
+            + id: 1 (number) - id of saddle
+            + name: `Test Saddle` (string) - name of saddle
+        + date: `31/12/2017` (string) - booking date in `d/m/y` format
+        + address: `Test Address` (string) - address of fitcheck
+        + created_at: `31/12/2017` (string) - booked date  in `d/m/y` format
+        + updated_at: `31/12/2017` (string) - booking details last updated date  in `d/m/y` format
+
+### Update Booking [PUT /api/v1/client/bookings/{booking_id}]
+
+Update details of a Booking
+
++ Parameters
+    + booking_id: 1 (number) - id of Booking to update
+
++ Request (application/json)
+    + Attributes
+        + fitter_id: 1 (number) - id of Fitter who will manage this FitCheck
+        + horse_id: 1 (number) - id of horse within the client
+        + rider_id: 1 (number) - id of rider within the client
+        + saddle_id: 1 (number, optional) - id of existing saddle
+        + date: `31/12/2017` (string, optional) - date of booking
+        + address: `Fakevile Fake Town` (string) - address of booking
+
++ Response 200 (application/json)
+    + Attributes
+        + success: true (boolean)
+        + id: 1 (number) - id of updated Booking
+
+### Delete Booking [DELETE /api/v1/client/bookings/{booking_id}]
+
+Delete an existing Booking
+
++ Parameters
+    + booking_id: 1 (number) - id of Booking to delete
+
++ Response 200 (application/json)
+    + Attributes
+        + success: true (boolean)
+
+## Horses [/api/v1/client/horses]
+
+Manage Horses of own Client.
+
+### List Horses [GET /api/v1/client/horses{?search,per_page,page}]
+
+Get paginated list of Horses filtered by stable name and breeding name
+
++ Parameters
+    + search: `Test Horse` (string, optional) filter string for stable name or breeding name
+    + per_page: 15 (number, optional) - Number of Horses per page to paginate
+    + page: 1 (number, optional) - Number of page to get
+
++ Response 200 (application/json)
+    + Attributes
+        + total: 2 (number) - Total item count
+        + current_page: 1 (number) - Current page of pagination
+        + per_page: 15 (number) - Number of items per page
+        + last_page: 1 (number) - Total pages of pagination
+        + data (array) - array of Horses returned
+            + (object) - individual Horse object
+                + id: 1 (number) - id of Horse
+                + stable_name: `Test Horse` (string) - name of Horse
+                + breeding_name: `Test Breed` (string) - breeding name of Horse
+                + breed: `Test Breed` (string) - breeding name of Horse
+                + colour: `black` (string) - color of Horse
+                + discipline: `Racing` - Discipline of Horse
+                + age: 10 (number) - Age of Horse
+                + sex: `Stallion` (string) - Sex of Horse
+
+### Create Horse [POST /api/v1/client/horses]
+
+Create a Horse belongs to Client
+
++ Request (application/json)
+    + Attributes
+        + stable_name: `New Horse` (string) - name of Horse
+        + breeding_name: `Test Breed` (string) - breeding of Horse
+        + paddock_address: `Test Address` (string) - paddock address of Horse
+        + postcode: `1234` (string) - postcode of Horse
+        + state: `QLD` (string) - state of Horse
+        + suburb: `FakeVile` (string) - suburb of Horse
+        + breed: `Test Breed` (string) - breeding of Horse
+        + height: 123 (number) - height of Horse
+        + weight: 234 (number) - weight of Horse
+        + girth: 345 (number) - girth size of Horse
+        + colour: `black` (string) - color of Horse
+        + age: 12 (number) - age of Horse
+        + dob: `31/12/2017` (string) - date of birth in d/m/Y format
+        + discipline: `Racing` (string) - discipline of Horse
+        + sex: `Stallion` (string) - sex of Horse
+        + microchip_number: `123ASDF` (string) -microchip number of Horse
+
++ Response 200 (application/json)
+    + Attributes
+        + succses: true (boolean)
+        + id: 1 (number) - id of Horse just created
+
+### Get Horse [GET /api/v1/client/horses/{horse_id}]
+
+Get details of a Horse
+
++ Parameters
+    + horse_id: 1 (number) - id of Horse to get details
+
++ Response 200 (appcation/json)
+    + Attributes
+        + id: 1 (number) - id of Horse
+        + stable_name: `Test Horse` (string) - name of Horse
+        + breeding_name: `Test Breed` (string) - breeding of Horse
+        + paddock_address: `Test Address` (string) - address of Horse
+        + postcode: `1234` (string) - postcode of Horse
+        + state: `QLD` (string) - state of Horse
+        + suburb: `FakeVile` (string) - suburb of Horse
+        + breed: `Test Breed` (string) - breeding of Horse
+        + colour: `black` (string) - color of Horse
+        + height: 123 (number) - height of Horse
+        + weight: 234 (number) - weight of Horse
+        + girth: 345 (number) - girth size of Horse
+        + age: 12 (number) - age of Horse
+        + dob: `31/12/2017` (string) - date of birth in d/m/Y format
+        + discipline: `Racing` (string) - discipline of Horse
+        + sex: `Stallion` (string) - sex of Horse
+        + microchip_number: `123AVC` (string) - microchip number of Horse
+        + created_at: `31/12/2017` (string) - date of Horse record created
+        + updated_at: `31/12/2017` (string) - date of Horse record updated
+        + riders (array) - riders related to this Horse
+        + saddles (array) - saddles related to this Horse
+
+### Update Horse [PUT /api/v1/client/horses/{horse_id}]
+
+Update a Horse details
+
++ Parameters
+    + horse_id: 1 (number) - id of Horse to delete
+
++ Request (application/json)
+    + Attributes
+        + stable_name: `New Horse` (string) - name of Horse
+        + breeding_name: `Test Breed` (string) - breeding of Horse
+        + paddock_address: `Test Address` (string) - paddock address of Horse
+        + postcode: `1234` (string) - postcode of Horse
+        + state: `QLD` (string) - state of Horse
+        + suburb: `FakeVile` (string) - suburb of Horse
+        + breed: `Test Breed` (string) - breeding of Horse
+        + height: 123 (number) - height of Horse
+        + weight: 234 (number) - weight of Horse
+        + girth: 345 (number) - girth size of Horse
+        + colour: `black` (string) - color of Horse
+        + age: 12 (number) - age of Horse
+        + dob: `31/12/2017` (string) - date of birth in d/m/Y format
+        + discipline: `Racing` (string) - discipline of Horse
+        + sex: `Stallion` (string) - sex of Horse
+        + microchip_number: `123ASDF` (string) -microchip number of Horse
+
++ Response 200 (application/json)
+    + Attributes
+        + succses: true (boolean)
+        + id: 1 (number) - id of Horse just updated
+
+### Delete Horse [DELETE /api/v1/client/horses/{horse_id}]
+
+Delete an existing Horse
+
++ Parameters
+    + horse_id: 1 (number) - id of Horse to delete
+
++ Response 200 (application/json)
+    + Attributes
+        + success: true (boolean)
+
+## MyFitters [/api/v1/client/my-fitters]
+
+Manage relation between own Client and Fitters, only related Fitters can manage this Client and his entities.
+
+### List Related Fitters [GET /api/v1/client/my-fitters{?related,search}]
+
+Get list of Fitters who can manage my Client / All Fitters filtered by name or email.
+
++ Parameters
+    + related: false (boolean, optional) - get list of Fitters who can manage or all Fitters including not related
+    + search: `TestFitter` (string, optional) - search string to filter name or email address
+
++ Response 200 (application/json)
+    + Attributes
+        + total: 2 (number) - Total item count
+        + current_page: 1 (number) - Current page of pagination
+        + per_page: 15 (number) - Number of items per page
+        + last_page: 1 (number) - Total pages of pagination
+        + data (array) - array of Fitters returned
+            + (object) - individual Fitter
+                + id: 1 (number) - if of Fitter
+                + name: `Test Fitter` (string) - name of Fitter
+                + abn: `1234` (string) - abn of Fitter
+                + phone: `1234567890` (string) - phone of Fitter
+                + email: `testfitter@com.com` (string) - email of Fitter
+                + suburb: `FakeVile` (string) - suburb of Fitter
+                + postcode: `1234` (string) - postcode of Fitter
+                + state: `QLD` (string) - state of Fitter
+                + logo: `http://testlogo.com/1.png` (string) - url of Logo
+                + created_at: `31/12/2017` (string) - item created date in `d/m/y` format
+                + updated_at: `31/12/2017` (string) - item updated date in `d/m/y` format
+
+### Relate Fitter [POST /api/v1/client/my-fitters/{fitter_id}]
+
+Set a Fitter as related, so that the Fitter can manage Client's data
+
++ Parameters
+    + fitter_id: 1 (number) - id of Fitter
+
++ Response 200 (application/json)
+    + Attributes
+        + success: true (boolean)
+
+### Un-Relate Fitter [DELETE /api/v1/client/my-fitters/{fitter_id}]
+
+Set a Fitter as not related, so that the Fitter can not manage Client's data
+
++ Parameters
+    + fitter_id: 1 (number) - id of Fitter
+
++ Response 200 (application/json)
+    + Attributes
+        + success: true (boolean)
+
+## Riders [/api/v1/client/riders]
+
+Manage Riders of own Client.
+
+### List Riders [GET /api/v1/client/riders{?search,per_page,page}]
+
+Get paginated list of Riders filtered by name or email address
+
++ Parameters
+    + search: `Test Rider` (string, optional) - filter string for name or email address
+    + per_page: 15 (number, optional) - Number of Riders per page to paginate
+    + page: 1 (number, optional) - Number of page to get
+
++ Response 200 (application/json)
+    + Attributes
+        + total: 2 (number) - Total item count
+        + current_page: 1 (number) - Current page of pagination
+        + per_page: 15 (number) - Number of items per page
+        + last_page: 1 (number) - Total pages of pagination
+        + data (array) - array of Riders returned
+            + (object) - individual Rider object
+                + id: 1 (number) - id of Rider
+                + client_id: 1 (number) - client id of Rider
+                + first_name: `TestFirstName` (string) - first name of Rider
+                + last_name: `` (string) - last name of Rider
+                + address: `Test Address` (string) - address of Rider
+                + postcode: `1234` (string) - postcode of Rider
+                + suburb: `Fake Vile` (string) - suburb of Rider
+                + state: `QLD` (string) - state of Rider
+                + mobile: `1234567890` (string) - mobile of Rider
+                + email: `testrider@com.com` (string) - email of Rider
+                + discipline: `Racing` (string) - discipline of Rider
+                + stirrup_size: `` (string) - stirrup size of Rider
+                + stirrup_leather: `` (string) - stirrup leather of Rider
+                + height: 180 (number) - height of Rider
+                + jodphur_size: `` (string) - jodphur size of Rider
+                + is_vip_member: false (boolean) - if Rider is VIP member
+                + award_points: 12 (number) - award points of Rider
+                + has_registered_on_website: false (boolean) - if Rider has registered on website
+                + created_at: `31/12/2017` (string) - item created date in `d/m/y` format
+                + updated_at: `31/12/2017` (string) - item updated date in `d/m/y` format
+
+### Create Rider [POST /api/v1/client/riders]
+
+Create a new Rider
+
++ Request (application/json)
+    + Attributes
+        + first_name: `TestFirstName` (string) - first name of Rider
+        + last_name: `` (string) - last name of Rider
+        + address: `Test Address` (string) - address of Rider
+        + postcode: `1234` (string) - postcode of Rider
+        + suburb: `Fake Vile` (string) - suburb of Rider
+        + state: `QLD` (string) - state of Rider
+        + mobile: `1234567890` (string) - mobile of Rider
+        + email: `testrider@com.com` (string) - email of Rider
+        + discipline: `Racing` (string) - discipline of Rider
+        + stirrup_size: `` (string) - stirrup size of Rider
+        + stirrup_leather: `` (string) - stirrup leather of Rider
+        + height: 180 (number) - height of Rider
+        + jodphur_size: `` (string) - jodphur size of Rider
+        + is_vip_member: false (boolean) - if Rider is VIP member
+        + award_points: 12 (number) - award points of Rider
+        + has_registered_on_website: false (boolean) - if Rider has registered on website
+
++ Response 200 (application/json)
+    + Attributes
+        + success: true (boolean)
+        + id: 1 (number) - id of Rider just created
+
+### Get Rider [GET /api/v1/client/riders/{rider_id}]
+
+Get details of a Rider
+
++ Parameters
+    + rider_id: 1 (number) - id of Rider to get Details
+
++ Response 200 (application/json)
+    + Attributes
+        + rider (object) - details of Rider
+                + id: 1 (number) - id of Rider
+                + client_id: 1 (number) - client id of Rider
+                + first_name: `TestFirstName` (string) - first name of Rider
+                + last_name: `` (string) - last name of Rider
+                + address: `Test Address` (string) - address of Rider
+                + postcode: `1234` (string) - postcode of Rider
+                + suburb: `Fake Vile` (string) - suburb of Rider
+                + state: `QLD` (string) - state of Rider
+                + mobile: `1234567890` (string) - mobile of Rider
+                + email: `testrider@com.com` (string) - email of Rider
+                + discipline: `Racing` (string) - discipline of Rider
+                + stirrup_size: `` (string) - stirrup size of Rider
+                + stirrup_leather: `` (string) - stirrup leather of Rider
+                + height: 180 (number) - height of Rider
+                + jodphur_size: `` (string) - jodphur size of Rider
+                + is_vip_member: false (boolean) - if Rider is VIP member
+                + award_points: 12 (number) - award points of Rider
+                + has_registered_on_website: false (boolean) - if Rider has registered on website
+                + created_at: `31/12/2017` (string) - item created date in `d/m/y` format
+                + updated_at: `31/12/2017` (string) - item updated date in `d/m/y` format
+        + client (object) - details of Rider's Client
+        + horses (array) - Horses belongs to the Rider
+        + fitters (array) - Fitters related to the Rider
+
+### Update Rider [PUT /api/v1/client/riders/{rider_id}]
+
+Update details of a Rider
+
++ Parameters
+    + rider_id: 1 (number) - id of Rider to update details
+
++ Request (application/json)
+    + Attributes
+        + first_name: `TestFirstName` (string) - first name of Rider
+        + last_name: `` (string) - last name of Rider
+        + address: `Test Address` (string) - address of Rider
+        + postcode: `1234` (string) - postcode of Rider
+        + suburb: `Fake Vile` (string) - suburb of Rider
+        + state: `QLD` (string) - state of Rider
+        + mobile: `1234567890` (string) - mobile of Rider
+        + email: `testrider@com.com` (string) - email of Rider
+        + discipline: `Racing` (string) - discipline of Rider
+        + stirrup_size: `` (string) - stirrup size of Rider
+        + stirrup_leather: `` (string) - stirrup leather of Rider
+        + height: 180 (number) - height of Rider
+        + jodphur_size: `` (string) - jodphur size of Rider
+        + is_vip_member: false (boolean) - if Rider is VIP member
+        + award_points: 12 (number) - award points of Rider
+        + has_registered_on_website: false (boolean) - if Rider has registered on website
+
++ Response 200 (application/json)
+    + Attributes
+        + success: true (boolean)
+        + id: 1 (number) - id of Rider just updated
+
+### Delete Rider [DELETE /api/v1/client/riders/{rider_id}]
+
+Delete existing Rider
+
++ Parameters
+    + rider_id: 1 (number) - id of Rider to delete
+
++ Response 200 (application/json)
+    + Attributes
+        + success: true (boolean)
